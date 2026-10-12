@@ -1,6 +1,6 @@
 {
   "model": "linear_svm_calibrated",
-  "version": "linear_svm_calibrated-20261012-0744",
+  "version": "linear_svm_calibrated-20261013-0047",
   "trained_rows": 2202,
   "classes": [
     "Academic Advising",
@@ -15,16 +15,16 @@
   ],
   "group_cv_scores": {
     "logistic_regression": {
-      "accuracy": 0.8442,
-      "macro_f1": 0.8434
+      "accuracy": 0.8483,
+      "macro_f1": 0.8472
     },
     "linear_svm_calibrated": {
-      "accuracy": 0.8501,
-      "macro_f1": 0.8494
+      "accuracy": 0.8574,
+      "macro_f1": 0.8558
     },
     "naive_bayes": {
-      "accuracy": 0.7166,
-      "macro_f1": 0.7165
+      "accuracy": 0.7257,
+      "macro_f1": 0.7248
     }
   },
   "random_cv_optimistic": {

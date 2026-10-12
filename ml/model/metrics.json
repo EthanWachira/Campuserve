@@ -1,0 +1,40 @@
+{
+  "model": "linear_svm_calibrated",
+  "version": "linear_svm_calibrated-20261012-0744",
+  "trained_rows": 2202,
+  "classes": [
+    "Academic Advising",
+    "Academic Records & Results",
+    "Admissions & Registration",
+    "Facilities & Accommodation",
+    "Fees & Billing Enquiries",
+    "IT Support",
+    "Library Services",
+    "Student Welfare",
+    "Timetable & Examinations"
+  ],
+  "group_cv_scores": {
+    "logistic_regression": {
+      "accuracy": 0.8442,
+      "macro_f1": 0.8434
+    },
+    "linear_svm_calibrated": {
+      "accuracy": 0.8501,
+      "macro_f1": 0.8494
+    },
+    "naive_bayes": {
+      "accuracy": 0.7166,
+      "macro_f1": 0.7165
+    }
+  },
+  "random_cv_optimistic": {
+    "accuracy": 1.0,
+    "macro_f1": 1.0
+  },
+  "holdout": {
+    "accuracy": 0.8899,
+    "macro_f1": 0.8703,
+    "test_rows": 427
+  },
+  "note": "Scores come from synthetic data and are optimistic. Re-evaluate on real tickets before relying on them."
+}

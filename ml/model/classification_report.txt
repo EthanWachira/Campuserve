@@ -1,0 +1,15 @@
+                            precision    recall  f1-score   support
+
+         Academic Advising      0.750     0.750     0.750        36
+Academic Records & Results      0.538     0.553     0.545        38
+ Admissions & Registration      1.000     0.795     0.886        44
+Facilities & Accommodation      0.945     1.000     0.972        52
+  Fees & Billing Enquiries      1.000     1.000     1.000        44
+                IT Support      0.816     1.000     0.899        40
+          Library Services      1.000     0.830     0.907        53
+           Student Welfare      1.000     1.000     1.000        79
+  Timetable & Examinations      0.826     0.927     0.874        41
+
+                  accuracy                          0.890       427
+                 macro avg      0.875     0.873     0.870       427
+              weighted avg      0.897     0.890     0.890       427

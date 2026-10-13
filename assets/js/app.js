@@ -1,4 +1,4 @@
-/* CampuServe front-end. Plain JavaScript, no dependencies, no inline scripts (see the CSP in core/App.php). */
+/* Campusserve front-end. Plain JavaScript, no dependencies, no inline scripts (see the CSP in core/App.php). */
 (function () {
     'use strict';
 

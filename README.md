@@ -1,4 +1,4 @@
-# CampuServe: first build (about 30% of the system)
+# Campusserve: first build (about 30% of the system)
 
 Web-based service request and academic scheduling system for BBIT 4D.
 Stack follows the proposal: HTML/CSS/JavaScript front end, PHP (MVC-style), MySQL, Python/scikit-learn ML service.
@@ -19,7 +19,7 @@ Not yet built (remaining ~70%): appointment booking workflow (tables, seed data 
 
 ## Run it on XAMPP
 
-1. Copy this folder to `C:\xampp\htdocs\campuserve`.
+1. Copy this folder to `C:\xampp\htdocs\Campusserve`.
 2. Start Apache and MySQL in the XAMPP control panel. Make sure `extension=curl` and `extension=mbstring` are enabled in `php.ini` (they are by default).
 3. Open phpMyAdmin, import `database/schema.sql`, then `database/seed.sql`.
    (Defaults assume MySQL user `root` with an empty password. Change `config/config.php` or set `CS_DB_USER` / `CS_DB_PASS` if yours differ.)
@@ -30,17 +30,17 @@ Not yet built (remaining ~70%): appointment booking workflow (tables, seed data 
    python api.py
    ```
    A trained model is included. To rebuild it: `python generate_dataset.py` then `python train.py`.
-5. Browse to http://localhost/campuserve/
+5. Browse to http://localhost/Campusserve/
 
 If step 4 is skipped the app still works: requests are classified by a keyword fallback and flagged "needs review".
 
 ### Demo accounts (password for all: `Password@123`)
 | Role | Email |
 |---|---|
-| Student | 110201@campuserve.test |
-| Support staff (ICT) | st1001@campuserve.test (st1003 = Finance, st1004 = Exams, ...) |
-| Lecturer | lc2001@campuserve.test |
-| Administrator | admin@campuserve.test |
+| Student | 110201@Campusserve.test |
+| Support staff (ICT) | st1001@Campusserve.test (st1003 = Finance, st1004 = Exams, ...) |
+| Lecturer | lc2001@Campusserve.test |
+| Administrator | admin@Campusserve.test |
 
 Set `demo_mode` to `false` in `config/config.php` to hide the demo buttons on the sign-in page.
 

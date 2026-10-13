@@ -2,7 +2,7 @@
 <html lang="en"><head><?php View::partial('head', ['title' => $title ?? '']); ?></head>
 <body class="auth">
 <section class="auth-art" aria-hidden="true">
-    <a class="brand" href="<?= e(url('home/index')) ?>"><?= logo() ?><span>CampuServe</span></a>
+    <a class="brand" href="<?= e(url('home/index')) ?>"><?= logo() ?><span>Campusserve</span></a>
     <div class="stub-demo">
         <div class="stub-top"><span>Request</span><b>CS-2026-000142</b></div>
         <ol class="trail">

@@ -1,5 +1,5 @@
 """
-CampuServe - synthetic dataset generator.
+Campusserve - synthetic dataset generator.
 
 The proposal calls for a hybrid training set: public IT/helpdesk tickets plus
 synthetic university-specific samples. This script produces the synthetic part.

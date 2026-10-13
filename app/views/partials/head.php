@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= e($title ?? 'CampuServe') ?> | CampuServe</title>
+<title><?= e($title ?? 'Campusserve') ?> | Campusserve</title>
 <meta name="csrf" content="<?= e(csrf_token()) ?>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

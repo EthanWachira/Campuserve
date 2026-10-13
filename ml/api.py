@@ -1,5 +1,5 @@
 """
-CampuServe - ML classification API (Flask).
+Campusserve - ML classification API (Flask).
 
     pip install -r requirements.txt
     python api.py            # listens on http://127.0.0.1:5000

@@ -20,7 +20,7 @@ $nav[] = ['notifications/index', 'Notifications', 'bell'];
 <body class="app">
 <a class="skip" href="#main">Skip to content</a>
 <aside class="side" id="side">
-    <a class="brand" href="<?= e(url('dashboard/index')) ?>"><?= logo() ?><span>CampuServe</span></a>
+    <a class="brand" href="<?= e(url('dashboard/index')) ?>"><?= logo() ?><span>Campusserve</span></a>
     <nav aria-label="Main">
         <?php foreach ($nav as [$r, $label, $ic]): ?>
             <?php $active = $route === $r || ($r === 'tickets/index' && $route === 'tickets/show') || ($r === 'admin/users' && $route === 'admin/users'); ?>

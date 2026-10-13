@@ -11,14 +11,13 @@ class User
         return (bool) Database::value('SELECT 1 FROM users WHERE email = ? OR identifier = ? LIMIT 1', [strtolower(trim($email)), trim($identifier)]);
     }
 
-    public static function createStudent(array $d): int
-    {
-        Database::exec(
-            'INSERT INTO users (role, identifier, full_name, email, password_hash, programme, year_of_study) VALUES ("student",?,?,?,?,?,?)',
-            [trim($d['identifier']), trim($d['full_name']), strtolower(trim($d['email'])), password_hash($d['password'], PASSWORD_DEFAULT), $d['programme'], (int) $d['year_of_study']]);
-        return Database::insertId();
-    }
-
+   public static function createStudent(array $d): int
+{
+    Database::exec(
+        'INSERT INTO users (role, identifier, full_name, email, date_of_birth, password_hash, programme, year_of_study) VALUES ("student",?,?,?,?,?,?,?)',
+        [trim($d['identifier']), trim($d['full_name']), strtolower(trim($d['email'])), $d['date_of_birth'], password_hash($d['password'], PASSWORD_DEFAULT), $d['programme'], (int) $d['year_of_study']]);
+    return Database::insertId();
+}
     public static function all(?string $role = null, string $q = ''): array
     {
         $where = []; $p = [];

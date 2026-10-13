@@ -1,5 +1,5 @@
 """
-CampuServe - train and evaluate the service-request classifier.
+Campusserve - train and evaluate the service-request classifier.
 
     python generate_dataset.py
     python train.py                       # synthetic data only
@@ -105,7 +105,7 @@ def main():
     fig, ax = plt.subplots(figsize=(9, 8))
     ConfusionMatrixDisplay.from_predictions(y.iloc[te], pred, ax=ax, xticks_rotation=40,
                                             colorbar=False, cmap="Blues")
-    ax.set_title("CampuServe request classifier - hold-out confusion matrix")
+    ax.set_title("Campusserve request classifier - hold-out confusion matrix")
     fig.tight_layout()
     fig.savefig(MODEL_DIR / "confusion_matrix.png", dpi=160)
 

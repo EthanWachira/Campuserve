@@ -17,7 +17,7 @@ class App
         });
         require_once BASE_PATH . '/core/helpers.php';
 
-        session_name('campuserve');
+        session_name('Campusserve');
         session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'httponly' => true, 'samesite' => 'Lax',
                                    'secure' => !empty($_SERVER['HTTPS'])]);
         session_start();
@@ -45,7 +45,7 @@ class App
         try {
             (new $class())->$action();
         } catch (PDOException $e) {
-            error_log('CampuServe DB error: ' . $e->getMessage());
+            error_log('Campusserve DB error: ' . $e->getMessage());
             http_response_code(500);
             View::render('errors/500', ['title' => 'Database unavailable'], 'layouts/plain');
         }

@@ -1,8 +1,8 @@
--- CampuServe database schema (MySQL 8 / MariaDB 10.4+, as shipped with XAMPP)
+-- Campusserve database schema (MySQL 8 / MariaDB 10.4+, as shipped with XAMPP)
 -- Import order: schema.sql, then seed.sql
 
-CREATE DATABASE IF NOT EXISTS campuserve CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE campuserve;
+CREATE DATABASE IF NOT EXISTS Campusserve CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE Campusserve;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS audit_log, notifications, appointments, lecturer_availability,

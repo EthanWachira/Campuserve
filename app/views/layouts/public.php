@@ -3,7 +3,7 @@
 <body class="public">
 <a class="skip" href="#main">Skip to content</a>
 <header class="pub-head">
-    <a class="brand brand-dark" href="<?= e(url('home/index')) ?>"><?= logo() ?><span>CampuServe</span></a>
+    <a class="brand brand-dark" href="<?= e(url('home/index')) ?>"><?= logo() ?><span>Campusserve</span></a>
     <nav class="pub-nav" aria-label="Main">
         <a href="#how">How it works</a>
         <a href="#routing">Where requests go</a>
@@ -17,8 +17,8 @@
 </header>
 <main id="main"><?php View::partial('flashes'); ?><?= $content ?></main>
 <footer class="pub-foot">
-    <div><a class="brand brand-dark" href="<?= e(url('home/index')) ?>"><?= logo() ?><span>CampuServe</span></a></div>
-    <p>A final-year project prototype for Strathmore University's BBIT programme. All people, requests and results shown are demo data.</p>
+    <div><a class="brand brand-dark" href="<?= e(url('home/index')) ?>"><?= logo() ?><span>Campusserve</span></a></div>
+    
 </footer>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 </body></html>

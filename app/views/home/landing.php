@@ -2,7 +2,7 @@
     <div class="hero-inner">
         <div class="hero-copy">
             <h1>Ask once. We route it, track it, and tell you when it is done.</h1>
-            <p class="lede">CampuServe sends each student request to the department that handles it, gives it an owner, and keeps a status you can check. One place, instead of five inboxes.</p>
+            <p class="lede">Campusserve sends each student request to the department that handles it, gives it an owner, and keeps a status you can check. One place, instead of five inboxes.</p>
             <div class="hero-cta">
                 <?php if (!empty($user)): ?>
                     <a class="btn btn-stub" href="<?= e(url('dashboard/index')) ?>">Open your dashboard</a>

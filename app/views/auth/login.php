@@ -1,5 +1,5 @@
 <h1>Sign in</h1>
-<p class="sub">Use your CampuServe email and password.</p>
+<p class="sub">Use your Campusserve email and password.</p>
 <form method="post" action="<?= e(url('auth/login')) ?>" novalidate>
     <?= csrf_field() ?>
     <div class="field">

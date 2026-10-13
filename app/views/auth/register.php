@@ -35,6 +35,11 @@
         <input type="email" id="email" name="email" autocomplete="email" value="<?= e(old('email')) ?>" class="<?= isset($errors['email']) ? 'is-invalid' : '' ?>" required>
         <?php if (isset($errors['email'])): ?><div class="err"><?= e($errors['email']) ?></div><?php endif; ?>
     </div>
+        <div class="field">
+        <label for="date_of_birth">Date of birth</label>
+        <input type="date" id="date_of_birth" name="date_of_birth" value="<?= e(old('date_of_birth')) ?>" max="<?= date('Y-m-d') ?>" class="<?= isset($errors['date_of_birth']) ? 'is-invalid' : '' ?>" required>
+        <?php if (isset($errors['date_of_birth'])): ?><div class="err"><?= e($errors['date_of_birth']) ?></div><?php endif; ?>
+    </div>
     <div class="row2">
         <div class="field">
             <label for="password">Password</label>

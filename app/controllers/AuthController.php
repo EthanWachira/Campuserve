@@ -23,7 +23,7 @@ class AuthController extends Controller
         }
 
         $demo = App::config('demo_mode')
-            ? Database::all('SELECT role, email, full_name FROM users WHERE email IN ("admin@campuserve.test","st1001@campuserve.test","lc2001@campuserve.test","110201@campuserve.test")
+            ? Database::all('SELECT role, email, full_name FROM users WHERE email IN ("admin@Campusserve.test","st1001@Campusserve.test","lc2001@Campusserve.test","110201@Campusserve.test")
                              ORDER BY FIELD(role,"student","lecturer","staff","admin")') : [];
         $this->render('auth/login', ['title' => 'Sign in', 'demoUsers' => $demo], 'layouts/auth');
         clear_old();
@@ -38,7 +38,7 @@ class AuthController extends Controller
             $d = [
                 'full_name' => trim((string) ($_POST['full_name'] ?? '')),
                 'identifier' => trim((string) ($_POST['identifier'] ?? '')),
-                'email' => strtolower(trim((string) ($_POST['email'] ?? ''))),
+                'email' =>    'date_of_birth' => trim((string) ($_POST['date_of_birth'] ?? '')),strtolower(trim((string) ($_POST['email'] ?? ''))),
                 'programme' => (string) ($_POST['programme'] ?? ''),
                 'year_of_study' => (int) ($_POST['year_of_study'] ?? 0),
                 'password' => (string) ($_POST['password'] ?? ''),
@@ -56,7 +56,7 @@ class AuthController extends Controller
             User::createStudent($d);
             [$ok] = Auth::attempt($d['email'], $d['password']);
             clear_old();
-            flash('success', 'Your account is ready. Welcome to CampuServe.');
+            flash('success', 'Your account is ready. Welcome to Campusserve.');
             redirect($ok ? Auth::homeRoute() : 'auth/login');
         }
 
@@ -88,6 +88,11 @@ class AuthController extends Controller
         } elseif ($d['password'] !== $confirm) {
             $e['password_confirm'] = 'The two passwords do not match.';
         }
+           $dob = DateTime::createFromFormat('Y-m-d', $d['date_of_birth']);
+   $today = new DateTime('today');
+   if (!$dob || $dob->format('Y-m-d') !== $d['date_of_birth'] || $dob > $today || $dob->diff($today)->y > 100) {
+       $e['date_of_birth'] = 'Enter a valid date of birth.';
+   }
         return $e;
     }
 }

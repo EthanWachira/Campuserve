@@ -1,7 +1,7 @@
 {
   "model": "linear_svm_calibrated",
-  "version": "linear_svm_calibrated-20261013-0047",
-  "trained_rows": 2202,
+  "version": "linear_svm_calibrated-20261018-1625",
+  "trained_rows": 3720,
   "classes": [
     "Academic Advising",
     "Academic Records & Results",
@@ -14,27 +14,37 @@
     "Timetable & Examinations"
   ],
   "group_cv_scores": {
+    "baseline_majority_class": {
+      "accuracy": 0.1172,
+      "macro_f1": 0.0233
+    },
     "logistic_regression": {
-      "accuracy": 0.8483,
-      "macro_f1": 0.8472
+      "accuracy": 0.8855,
+      "macro_f1": 0.886
     },
     "linear_svm_calibrated": {
-      "accuracy": 0.8574,
-      "macro_f1": 0.8558
+      "accuracy": 0.8987,
+      "macro_f1": 0.8989
     },
     "naive_bayes": {
-      "accuracy": 0.7257,
-      "macro_f1": 0.7248
+      "accuracy": 0.7925,
+      "macro_f1": 0.7926
     }
   },
+  "grouped_cv_accuracy_by_source": {
+    "synthetic-sentence": 0.8934,
+    "synthetic-keyword": 0.8977,
+    "synthetic-ambiguous": 1.0
+  },
   "random_cv_optimistic": {
-    "accuracy": 1.0,
-    "macro_f1": 1.0
+    "accuracy": 0.9968,
+    "macro_f1": 0.9967
   },
   "holdout": {
-    "accuracy": 0.8899,
-    "macro_f1": 0.8703,
-    "test_rows": 427
+    "accuracy": 0.9022,
+    "macro_f1": 0.9074,
+    "test_rows": 716
   },
+  "external_validation": null,
   "note": "Scores come from synthetic data and are optimistic. Re-evaluate on real tickets before relying on them."
 }

@@ -36,13 +36,14 @@ class AuthController extends Controller
         if ($this->isPost()) {
             $this->requireCsrf();
             $d = [
-                'full_name' => trim((string) ($_POST['full_name'] ?? '')),
-                'identifier' => trim((string) ($_POST['identifier'] ?? '')),
-                'email' =>    'date_of_birth' => trim((string) ($_POST['date_of_birth'] ?? '')),strtolower(trim((string) ($_POST['email'] ?? ''))),
-                'programme' => (string) ($_POST['programme'] ?? ''),
-                'year_of_study' => (int) ($_POST['year_of_study'] ?? 0),
-                'password' => (string) ($_POST['password'] ?? ''),
-            ];
+    'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+    'identifier' => trim((string) ($_POST['identifier'] ?? '')),
+    'email' => strtolower(trim((string) ($_POST['email'] ?? ''))),
+    'date_of_birth' => trim((string) ($_POST['date_of_birth'] ?? '')),
+    'programme' => (string) ($_POST['programme'] ?? ''),
+    'year_of_study' => (int) ($_POST['year_of_study'] ?? 0),
+    'password' => (string) ($_POST['password'] ?? ''),
+];
             $confirm = (string) ($_POST['password_confirm'] ?? '');
             $errors = $this->validateRegistration($d, $confirm);
             if (!$errors && User::emailOrIdTaken($d['email'], $d['identifier'])) {

@@ -1,5 +1,5 @@
 """
-Campusserve - train and evaluate the service-request classifier.
+CampuServe - train and evaluate the service-request classifier.
 
     python generate_dataset.py
     python train.py                       # synthetic data only
@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (ConfusionMatrixDisplay, accuracy_score,
@@ -45,6 +46,7 @@ def features():
 
 
 CANDIDATES = {
+    "baseline_majority_class": lambda: Pipeline([("f", TfidfVectorizer()), ("c", DummyClassifier(strategy="most_frequent"))]),
     "logistic_regression": lambda: Pipeline([("f", features()), ("c", LogisticRegression(max_iter=2000, C=10))]),
     "linear_svm_calibrated": lambda: Pipeline([("f", features()),
                                               ("c", CalibratedClassifierCV(LinearSVC(C=1.0), cv=3))]),
@@ -66,6 +68,7 @@ def load(extra: str | None) -> pd.DataFrame:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--extra", help="optional CSV with text,category columns to merge")
+    ap.add_argument("--external", help="independently written, hand-reviewed CSV (text,category,reviewed) used ONLY for testing")
     args = ap.parse_args()
 
     df = load(args.extra)
@@ -81,6 +84,11 @@ def main():
                         "macro_f1": round(f1_score(y, pred, average="macro"), 4)}
         print(f"  {name:24s} acc={scores[name]['accuracy']:.3f}  macro-F1={scores[name]['macro_f1']:.3f}")
     best = max(scores, key=lambda k: scores[k]["macro_f1"])
+    # Per-source breakdown of the grouped-CV predictions of the selected model.
+    best_pred = cross_val_predict(CANDIDATES[best](), X, y, groups=groups, cv=gkf)
+    by_source = {src: round(float(accuracy_score(y[df.source == src], best_pred[(df.source == src).values])), 4)
+                 for src in df.source.unique()}
+    print("  accuracy by data source (grouped CV):", by_source)
     # Reference only: random split lets paraphrases of one issue leak across folds, so this is optimistic.
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
     rpred = cross_val_predict(CANDIDATES[best](), X, y, cv=skf)
@@ -105,18 +113,35 @@ def main():
     fig, ax = plt.subplots(figsize=(9, 8))
     ConfusionMatrixDisplay.from_predictions(y.iloc[te], pred, ax=ax, xticks_rotation=40,
                                             colorbar=False, cmap="Blues")
-    ax.set_title("Campusserve request classifier - hold-out confusion matrix")
+    ax.set_title("CampuServe request classifier - hold-out confusion matrix")
     fig.tight_layout()
     fig.savefig(MODEL_DIR / "confusion_matrix.png", dpi=160)
 
     # 3. Final model trained on everything.
     final = CANDIDATES[best]()
     final.fit(X, y)
+
+    external = None
+    if args.external:
+        ext = pd.read_csv(args.external)
+        ext = ext[(ext.get("reviewed", "").astype(str).str.lower() == "y") & ext.category.isin(final.classes_)]
+        if len(ext) >= 20:
+            ep = final.predict(ext["text"].astype(str))
+            external = {"rows": int(len(ext)), "accuracy": round(float(accuracy_score(ext.category, ep)), 4),
+                        "macro_f1": round(float(f1_score(ext.category, ep, average="macro")), 4)}
+            rep = classification_report(ext.category, ep, digits=3, zero_division=0)
+            (MODEL_DIR / "external_report.txt").write_text(rep, encoding="utf-8")
+            miss = ext.assign(predicted=ep)[ext.category.values != ep]
+            miss.to_csv(MODEL_DIR / "external_errors.csv", index=False)
+            print("\nEXTERNAL test (independently written, never trained on):", external)
+            print(rep)
+        else:
+            print("External file has fewer than 20 reviewed rows with a known category; skipped.")
     version = datetime.now().strftime("%Y%m%d-%H%M")
     joblib.dump({"pipeline": final, "version": f"{best}-{version}"}, MODEL_DIR / "classifier.joblib")
     (MODEL_DIR / "metrics.json").write_text(json.dumps({
         "model": best, "version": f"{best}-{version}", "trained_rows": int(len(df)),
-        "classes": sorted(y.unique().tolist()), "group_cv_scores": scores, "random_cv_optimistic": random_cv, "holdout": holdout,
+        "classes": sorted(y.unique().tolist()), "group_cv_scores": scores, "grouped_cv_accuracy_by_source": by_source, "random_cv_optimistic": random_cv, "holdout": holdout, "external_validation": external,
         "note": "Scores come from synthetic data and are optimistic. Re-evaluate on real tickets before relying on them.",
     }, indent=2), encoding="utf-8")
     print(f"Saved model {best}-{version}")

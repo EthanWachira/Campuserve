@@ -1,15 +1,16 @@
 """
-Campusserve - synthetic dataset generator.
+CampuServe - training data generator (university-specific, Kenyan higher-education context).
 
-The proposal calls for a hybrid training set: public IT/helpdesk tickets plus
-synthetic university-specific samples. This script produces the synthetic part.
-Public data can be merged later with:  python train.py --extra data/public.csv
-(the CSV needs the columns: text,category).
+HONESTY NOTE (put this in the report): this is SYNTHETIC data written for this project. It is not
+historical Strathmore data. It is built from hand-written student requests that reflect real
+university processes (fee statements and M-Pesa paybill payments, HELB loans, CATs and
+supplementary exams, retakes, industrial attachment, hostel and shuttle problems, project
+supervision) and then varied with typos, SMS-style shortcuts, unit codes and polite openers.
+Because the same author wrote every sentence, scores on it are optimistic, so the project also
+validates on an independently written EXTERNAL set (see prepare_external.py and train.py --external).
 
-Every sample carries an `issue_id`. The trainer uses it for group-wise
-cross-validation so that paraphrases of one issue never appear in both the
-training and test folds. That gives an honest accuracy estimate instead of a
-score inflated by near-duplicate sentences.
+Every sample carries an `issue_id`. The trainer uses it for group-wise cross-validation so
+paraphrases of one issue never appear in both the training and test folds.
 """
 import csv
 import random
@@ -203,13 +204,178 @@ NOUN_TEMPLATES = [
     "I have an issue with my {n}", "enquiry about {n}",
 ]
 
+EXTRA_ISSUES = {
+    "IT Support": [
+        "I cannot access the student portal because it says my session has expired every time I log in",
+        "the eLearning platform is not showing the units I am enrolled in",
+        "my student email was suspended and I need it reactivated",
+        "I keep getting a wrong credentials error on the portal even though my password is correct",
+        "the wifi in the hostel is very slow and drops every few minutes",
+        "I cannot submit my assignment on eLearning because the upload keeps failing",
+        "my exam card page does not load on the portal",
+        "I need a new password because I cannot answer my security question",
+        "the computer lab machines do not accept my admission number to log in",
+        "I cannot connect my phone to the campus wifi network",
+        "Microsoft Teams says I do not have a licence on my student account",
+        "the online exam platform logged me out in the middle of my paper",
+        "my fee statement page on the portal shows a blank screen",
+        "I need to update my phone number on the portal but the page gives an error",
+    ],
+    "Academic Records & Results": [
+        "my CAT 2 marks for one unit are missing on the portal",
+        "I want to apply for a retake because I failed a unit last semester",
+        "the final grade for my unit shows as incomplete",
+        "I need an academic transcript to apply for a master's programme abroad",
+        "my provisional results have not been released yet",
+        "I want to appeal the grade I got in my exam",
+        "I need a letter confirming my current year of study for a visa application",
+        "my student ID card has expired and needs to be renewed",
+        "one of the units I completed is not on my transcript",
+        "I need a certificate of completion for my diploma",
+        "the system shows a supplementary for a unit that I passed",
+        "I want to apply for a change of name on my records",
+        "I need to know my class of degree after the final results",
+        "my graduation clearance form was rejected",
+    ],
+    "Fees & Billing Enquiries": [
+        "I paid through the paybill but the money has not reflected on my statement",
+        "I want to know the fee balance I must clear before I can sit exams",
+        "my HELB loan was disbursed but my account does not show it",
+        "I need an invoice for the coming semester to give to my sponsor",
+        "I was charged for a unit that I dropped",
+        "I want to request to pay my fees in three instalments",
+        "my parent paid fees twice and we want a refund",
+        "I need a fee clearance for my industrial attachment",
+        "the fee structure for my programme changed without any notice",
+        "my scholarship amount has not been applied to my fees",
+        "I need a payment receipt for the bank deposit I made",
+        "I have been blocked from the portal because of a fee balance",
+        "I want to defer paying part of my fees until my loan comes in",
+        "the amount on my statement does not match my payment slip",
+    ],
+    "Timetable & Examinations": [
+        "I have two exams scheduled on the same day at the same time",
+        "the CAT dates for my unit have not been announced",
+        "my class was moved to another venue but the timetable still shows the old room",
+        "I missed my CAT because I was sick and I need a makeup",
+        "the exam timetable shows the wrong unit code for my paper",
+        "I cannot find my exam room number",
+        "I need the supplementary exam timetable",
+        "two of my lectures overlap on Tuesday afternoon",
+        "the lecturer did not come to class and nobody told us about a makeup session",
+        "my exam card does not list all the units I registered for",
+        "I was not allowed into the exam because my name was missing on the register",
+        "I would like to know when the end of semester exams start",
+        "the online exam link did not work at the scheduled time",
+        "I want to reschedule my exam because I will represent the university at an event",
+    ],
+    "Admissions & Registration": [
+        "I am a continuing student and need to register for next semester's units",
+        "I want to change from full time to part time study",
+        "I applied for admission and I have not received any feedback",
+        "I need to submit my KCSE certificate for my admission file",
+        "I want to be added to a unit that is already full",
+        "I registered for a wrong unit and I want to swap it",
+        "I want to apply for the January intake",
+        "my admission number is not working on the registration page",
+        "I want to transfer my credits from another university",
+        "I need to know the documents required for registration as a new student",
+        "I want to withdraw from the university",
+        "I want to rejoin after taking a semester off",
+        "I need to change my specialisation before I register",
+        "my unit registration was not approved by my department",
+    ],
+    "Library Services": [
+        "I want to borrow a reference book that is only for use inside the library",
+        "my library clearance is pending because of an unreturned book",
+        "I cannot log in to the library e-resources with my student account",
+        "I need a past paper from the library archive",
+        "the library closes too early during exams",
+        "I want to borrow a laptop from the library",
+        "I need help accessing journal articles for my final year project",
+        "I returned the book but the system still shows it as borrowed",
+        "I want to join the library orientation session",
+        "the printers in the library are not working",
+        "I want to reserve a book that someone else has borrowed",
+        "I need a library fine waiver because I was sick",
+        "the study cubicles in the library are always full during exams",
+        "I need help with referencing styles from a librarian",
+    ],
+    "Student Welfare": [
+        "I have been feeling very low and I cannot concentrate on my studies",
+        "I need a counsellor because I am struggling to cope with the pressure",
+        "my father passed away and I will miss classes",
+        "I have been bullied by classmates and I need help",
+        "I cannot afford food and I need support",
+        "I need information about the emergency fund for students",
+        "I want to report an incident that happened in the hostel",
+        "I got injured and I need to see the university clinic",
+        "I need a reasonable accommodation such as a ground floor classroom because of my disability",
+        "I am worried about a friend who has stopped attending classes and seems depressed",
+        "I am a young mother and need support with childcare during exams",
+        "I feel unsafe walking back to the hostel at night",
+        "I need a letter from the clinic to excuse my absence",
+        "I would like to join the mentorship programme for first year students",
+    ],
+    "Facilities & Accommodation": [
+        "the hostel has had no water since morning",
+        "I want to apply for a room in the hostel next semester",
+        "my room has a broken window and mosquitoes come in",
+        "the shuttle bus did not come this morning",
+        "I need a parking sticker for my car",
+        "the toilets in the lecture block are blocked",
+        "I want to book the auditorium for a club meeting",
+        "the power has been out in the hostel for two days",
+        "I lost my hostel key and need a replacement",
+        "the sockets in the lecture hall are not working so I cannot charge my laptop",
+        "the cafeteria does not have clean drinking water",
+        "the gym equipment is broken",
+        "the security light near the parking is not working",
+        "I need to change my room because my roommate is very noisy",
+    ],
+    "Academic Advising": [
+        "I want to discuss which specialisation suits my career goals",
+        "I need a supervisor for my final year project",
+        "my project supervisor has not given me feedback for three weeks",
+        "I need guidance on how to find an industrial attachment placement",
+        "I want to book a meeting with my lecturer about a low CAT mark",
+        "I am failing two units and need advice on what to do",
+        "I need a reference letter from my lecturer for a job application",
+        "can my mentor help me plan my remaining units",
+        "I need help deciding between two elective units",
+        "I want to understand the prerequisites for the units I want to take next semester",
+        "I need to see my academic advisor before I can register",
+        "I want feedback on my assignment because I do not understand my grade",
+        "I need career advice about data engineering jobs",
+        "I want to meet the head of department about my project topic",
+    ],
+}
+for _k, _v in EXTRA_ISSUES.items():
+    ISSUES[_k] = ISSUES[_k] + _v
+
+EXTRA_NOUNS = {
+    "IT Support": ["student email password", "portal session", "hostel wifi", "eLearning upload", "Teams licence", "lab login", "online exam link", "OTP code"],
+    "Academic Records & Results": ["retake application", "provisional results", "grade appeal", "transcript request", "student ID renewal", "completion certificate", "supplementary result", "name change on records"],
+    "Fees & Billing Enquiries": ["paybill payment", "M-Pesa receipt", "HELB loan", "sponsor invoice", "fee instalment plan", "scholarship deduction", "caution money refund", "fee balance"],
+    "Timetable & Examinations": ["CAT timetable", "supplementary exam date", "makeup CAT", "exam room", "lecture venue change", "exam register", "online exam", "end of semester exams"],
+    "Admissions & Registration": ["unit swap", "January intake", "credit transfer", "readmission", "withdrawal form", "KCSE certificate upload", "part time study", "specialisation change"],
+    "Library Services": ["past papers", "e-resources login", "library clearance", "reference book loan", "laptop loan", "discussion room", "library printing", "journal access"],
+    "Student Welfare": ["counsellor appointment", "bereavement support", "emergency fund", "clinic letter", "bullying report", "mentorship programme", "childcare support", "hostel incident"],
+    "Facilities & Accommodation": ["hostel water", "hostel allocation", "shuttle bus", "parking sticker", "broken sockets", "auditorium booking", "roof leak", "security light"],
+    "Academic Advising": ["project supervisor", "reference letter", "elective choice", "attachment placement", "advisor meeting", "feedback on CAT", "career advice", "unit prerequisites"],
+}
+for _k, _v in EXTRA_NOUNS.items():
+    NOUNS[_k] = NOUNS[_k] + _v
+
+UNIT_PREFIXES = ["BBT", "ICS", "BIT", "ACF", "BCM", "LLB"]
+
 OPENERS = [
-    "", "", "Hello, ", "Good morning, ", "Hi team, ", "Dear support, ",
-    "Please help. ", "Urgent: ", "Kindly assist, ", "Good afternoon, ",
-    "To whom it may concern, ", "Hi, ",
+    "", "", "", "Hello, ", "Good morning, ", "Good evening, ", "Hi team, ", "Dear support, ",
+    "Please help. ", "Urgent: ", "Kindly assist, ", "Good afternoon, ", "To whom it may concern, ",
+    "Hi, ", "Hello admin, ", "Dear Sir/Madam, ", "Hi, I hope you are well. ",
 ]
 DETAILS = [
-    "", "", "",
+    "", "", "", "",
     " This has been happening since Monday.",
     " I am in my third year.",
     " I am a first year student.",
@@ -220,11 +386,17 @@ DETAILS = [
     " I have attached a screenshot.",
     " This is affecting my coursework.",
     " I reported this last week and nothing has changed.",
+    " I am a final year student.",
+    " My admission number is on the portal.",
+    " I need this sorted before the end of the week.",
+    " I have the receipt with me.",
+    " I am a continuing student.",
+    " I came to the office but I was told to apply online.",
 ]
 CLOSERS = [
-    "", "", " Thank you.", " Please assist.", " Regards.",
-    " Kindly advise.", " I appreciate your help.", " Thanks in advance.",
-    " Please let me know the next step.",
+    "", "", "", " Thank you.", " Please assist.", " Regards.", " Kindly advise.",
+    " I appreciate your help.", " Thanks in advance.", " Please let me know the next step.",
+    " Asante.", " Looking forward to your response.", " Kindly help as soon as possible.",
 ]
 # Mixed-signal sentences: the surface words belong to one class, the label to another.
 AMBIGUOUS = [
@@ -238,15 +410,40 @@ AMBIGUOUS = [
     ("I am stressed because of my exam timetable clash and need counselling", "Student Welfare"),
     ("registration is blocked because of my fee balance", "Fees & Billing Enquiries"),
     ("my unit is missing from the timetable after I registered", "Timetable & Examinations"),
+    ("I cannot register for units because the portal is not loading", "IT Support"),
+    ("I paid my fees but the portal will not show my receipt", "IT Support"),
+    ("the library fine is on my fee statement and I do not know why", "Library Services"),
+    ("I need a letter from the counsellor to defer my exams", "Student Welfare"),
+    ("my hostel fee was charged but I have no room", "Facilities & Accommodation"),
+    ("I want my lecturer to explain why my transcript shows a retake", "Academic Advising"),
+    ("my supplementary exam fee is not on the statement", "Fees & Billing Enquiries"),
+    ("the exam card says I am not registered for a unit I am attending", "Admissions & Registration"),
+    ("I cannot open my results on the portal and need a printed copy", "Academic Records & Results"),
+    ("my lecturer has not uploaded the exam venue for my unit", "Timetable & Examinations"),
 ]
 
 TYPO_MAP = {"the": "teh", "because": "becuase", "registration": "registeration",
             "password": "pasword", "library": "libary", "timetable": "time table"}
 
 
+SMS = {"please": "pls", "kindly": "kindly", "because": "coz", "thanks": "thanx", "tomorrow": "tmrw",
+       "message": "msg", "with": "wit", "you": "u", "your": "ur"}
+
+
+def sms_style(text: str) -> str:
+    words = text.split()
+    return " ".join(SMS.get(w.lower().strip(".,"), w) if random.random() < 0.7 else w for w in words)
+
+
+def unit_code() -> str:
+    return f"{random.choice(UNIT_PREFIXES)} {random.randint(1, 4)}{random.randint(100, 399)}"
+
+
 def noisy(text: str) -> str:
     """Randomly lowercase, strip punctuation or inject a typo to mimic real tickets."""
     r = random.random()
+    if random.random() < 0.10:
+        text = sms_style(text)
     if r < 0.25:
         text = text.lower()
     if r < 0.12:
@@ -261,7 +458,7 @@ def noisy(text: str) -> str:
     return text
 
 
-def build(samples_per_issue: int = 9):
+def build(samples_per_issue: int = 8):
     rows = []
     issue_id = 0
     for category, issues in ISSUES.items():
@@ -273,11 +470,14 @@ def build(samples_per_issue: int = 9):
                 tries += 1
                 opener = random.choice(OPENERS)
                 body = issue[0].upper() + issue[1:] if opener == "" or opener.endswith(". ") else issue
-                text = opener + body + "." + random.choice(DETAILS) + random.choice(CLOSERS)
+                detail = random.choice(DETAILS)
+                if random.random() < 0.12:
+                    detail += f" The unit is {unit_code()}."
+                text = opener + body + "." + detail + random.choice(CLOSERS)
                 text = noisy(" ".join(text.split()))
                 if text not in seen:
                     seen.add(text)
-                    rows.append({"text": text, "category": category, "issue_id": issue_id, "source": "synthetic"})
+                    rows.append({"text": text, "category": category, "issue_id": issue_id, "source": "synthetic-sentence"})
     for category, nouns in NOUNS.items():
         for noun in nouns:
             issue_id += 1                       # one group per (class, topic)

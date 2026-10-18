@@ -1,8 +1,8 @@
--- Campusserve database schema (MySQL 8 / MariaDB 10.4+, as shipped with XAMPP)
+-- CampuServe database schema (MySQL 8 / MariaDB 10.4+, as shipped with XAMPP)
 -- Import order: schema.sql, then seed.sql
 
-CREATE DATABASE IF NOT EXISTS Campusserve CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE Campusserve;
+CREATE DATABASE IF NOT EXISTS campuserve CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE campuserve;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS audit_log, notifications, appointments, lecturer_availability,
@@ -22,6 +22,8 @@ CREATE TABLE users (
     identifier      VARCHAR(30)  NOT NULL UNIQUE COMMENT 'admission no. for students, staff no. otherwise',
     full_name       VARCHAR(120) NOT NULL,
     email           VARCHAR(150) NOT NULL UNIQUE,
+    date_of_birth   DATE NULL,
+    age             TINYINT UNSIGNED NULL COMMENT 'derived from date_of_birth by triggers and a daily event; never edit by hand',
     password_hash   VARCHAR(255) NOT NULL,
     department_id   INT UNSIGNED NULL COMMENT 'staff and lecturers only',
     programme       VARCHAR(100) NULL COMMENT 'students only',
@@ -147,3 +149,16 @@ CREATE TABLE audit_log (
     INDEX idx_audit_user (user_id, created_at),
     INDEX idx_audit_action (action, created_at)
 ) ENGINE=InnoDB;
+
+-- Age is derived from date_of_birth. The triggers recalculate it on every insert/update (so it is refreshed
+-- whenever a user signs in); the daily event covers people who turn a year older without signing in.
+-- The event only runs when the scheduler is on:  SET GLOBAL event_scheduler = ON;
+DROP TRIGGER IF EXISTS users_age_insert;
+DROP TRIGGER IF EXISTS users_age_update;
+CREATE TRIGGER users_age_insert BEFORE INSERT ON users FOR EACH ROW
+    SET NEW.age = IF(NEW.date_of_birth IS NULL, NULL, TIMESTAMPDIFF(YEAR, NEW.date_of_birth, CURDATE()));
+CREATE TRIGGER users_age_update BEFORE UPDATE ON users FOR EACH ROW
+    SET NEW.age = IF(NEW.date_of_birth IS NULL, NULL, TIMESTAMPDIFF(YEAR, NEW.date_of_birth, CURDATE()));
+DROP EVENT IF EXISTS refresh_user_ages;
+CREATE EVENT refresh_user_ages ON SCHEDULE EVERY 1 DAY STARTS (CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 5 MINUTE)
+    DO UPDATE users SET age = TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) WHERE date_of_birth IS NOT NULL;

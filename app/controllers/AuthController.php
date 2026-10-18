@@ -23,7 +23,7 @@ class AuthController extends Controller
         }
 
         $demo = App::config('demo_mode')
-            ? Database::all('SELECT role, email, full_name FROM users WHERE email IN ("admin@Campusserve.test","st1001@Campusserve.test","lc2001@Campusserve.test","110201@Campusserve.test")
+            ? Database::all('SELECT role, email, full_name FROM users WHERE id IN (1, 2, 12, 15)
                              ORDER BY FIELD(role,"student","lecturer","staff","admin")') : [];
         $this->render('auth/login', ['title' => 'Sign in', 'demoUsers' => $demo], 'layouts/auth');
         clear_old();

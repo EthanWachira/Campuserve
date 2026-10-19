@@ -1,4 +1,4 @@
-# Campusserve: first build (about 30% of the system)
+# Campusserve: A Web-Based System for Integrated Service Request and Academic Scheduling
 
 Web-based service request and academic scheduling system for BBIT 4D.
 Stack follows the proposal: HTML/CSS/JavaScript front end, PHP (MVC-style), MySQL, Python/scikit-learn ML service.

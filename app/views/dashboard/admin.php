@@ -1,8 +1,9 @@
 <div class="page-head"><div><h2>System overview</h2><p>Everything across the university, in one place.</p></div>
-    <a class="btn btn-ghost" href="<?= e(url('admin/ml')) ?>">Classifier performance</a></div>
+    <div class="row-actions"><a class="btn btn-primary" href="<?= e(url('reports/index')) ?>">Reports</a> <a class="btn btn-ghost" href="<?= e(url('admin/ml')) ?>">Classifier performance</a></div></div>
 <div class="kpis">
     <div class="kpi is-key"><div class="n"><?= array_sum($counts) ?></div><div class="l">Total requests</div></div>
     <div class="kpi<?= $unassigned ? ' is-alert' : '' ?>"><div class="n"><?= $unassigned ?></div><div class="l">Waiting for an owner</div></div>
+    <div class="kpi<?= $overdue ? ' is-alert' : '' ?>"><div class="n"><?= (int) $overdue ?></div><div class="l">Past service target</div></div>
     <div class="kpi"><div class="n"><?= e(hours_label($avgHours)) ?></div><div class="l">Average time to resolve (30 days)</div></div>
     <div class="kpi"><div class="n"><?= $ml['rate'] === null ? '-' : $ml['rate'] . '%' ?></div><div class="l">Classifier category kept by staff</div></div>
     <div class="kpi"><div class="n"><?= array_sum($roles) ?></div><div class="l">Users (<?= (int) ($roles['student'] ?? 0) ?> students)</div></div>

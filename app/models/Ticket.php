@@ -79,6 +79,20 @@ class Ticket
         return ['rows' => $rows, 'total' => $total, 'pages' => $pages, 'page' => $page];
     }
 
+    public static function attachments(int $ticketId): array
+    {
+        return Database::all(
+            'SELECT a.id, a.original_name, a.mime_type, a.file_size, a.created_at, u.full_name AS uploader_name
+               FROM ticket_attachments a LEFT JOIN users u ON u.id = a.uploaded_by
+              WHERE a.ticket_id = ? ORDER BY a.created_at, a.id', [$ticketId]
+        );
+    }
+
+    public static function attachment(int $id): ?array
+    {
+        return Database::one('SELECT * FROM ticket_attachments WHERE id = ?', [$id]);
+    }
+
     public static function updates(int $ticketId, bool $includeInternal): array
     {
         return Database::all(
@@ -130,6 +144,7 @@ class Ticket
             Database::rollback();
             throw $e;
         }
+        try { self::autoAssign($id); } catch (Throwable $e) { error_log('auto-assign failed: ' . $e->getMessage()); }
         return [$id, $ref];
     }
 
@@ -170,6 +185,7 @@ class Ticket
         Database::exec('UPDATE tickets SET needs_review = 0 WHERE id = ?', [$t['id']]);
         Database::exec('UPDATE ml_predictions SET final_category_id = ? WHERE ticket_id = ?', [$t['category_id'], $t['id']]);
         self::addUpdate((int) $t['id'], (int) $actor['id'], 'Category confirmed: ' . $t['category_name'] . '.', null, null, true);
+        self::autoAssign((int) $t['id']);
     }
 
     /** Staff correct the category. Re-routes the request when the department changes. */
@@ -189,6 +205,38 @@ class Ticket
                 Notification::send((int) $s['id'], 'Re-routed request ' . $t['reference_no'], $t['subject'], '?r=tickets/show&id=' . $t['id']);
             }
         }
+        self::autoAssign((int) $t['id']);
         return true;
+    }
+
+    /**
+     * Automatic assignment: give an unassigned, open request to the person in the owning department
+     * with the fewest active requests (ties: whoever has handled the fewest overall, then lowest id).
+     * Requests whose category still needs a human check are left alone, because the department may be wrong.
+     * $force = true is used by the administrator's "assign waiting requests now" button and ignores the on/off switch.
+     * @return string|null name of the person assigned, or null if nothing was done
+     */
+    public static function autoAssign(int $ticketId, bool $force = false): ?string
+    {
+        if (!$force && Settings::get('auto_assign', '0') !== '1') return null;
+        $t = self::find($ticketId);
+        if (!$t || $t['assigned_to'] || $t['status'] !== 'open' || $t['needs_review']) return null;
+        $candidates = self::assignees((int) $t['department_id']);
+        if (!$candidates) return null;
+
+        $ids = array_map('intval', array_column($candidates, 'id'));
+        $in = implode(',', array_fill(0, count($ids), '?'));
+        $active = array_column(Database::all("SELECT assigned_to, COUNT(*) n FROM tickets WHERE assigned_to IN ($in) AND status IN ('open','assigned','in_progress') GROUP BY assigned_to", $ids), 'n', 'assigned_to');
+        $total = array_column(Database::all("SELECT assigned_to, COUNT(*) n FROM tickets WHERE assigned_to IN ($in) GROUP BY assigned_to", $ids), 'n', 'assigned_to');
+        usort($candidates, fn($a, $b) => [(int) ($active[$a['id']] ?? 0), (int) ($total[$a['id']] ?? 0), (int) $a['id']]
+                                      <=> [(int) ($active[$b['id']] ?? 0), (int) ($total[$b['id']] ?? 0), (int) $b['id']]);
+        $pick = $candidates[0];
+
+        $changed = Database::exec('UPDATE tickets SET assigned_to = ?, status = "assigned" WHERE id = ? AND assigned_to IS NULL AND status = "open"', [$pick['id'], $t['id']]);
+        if (!$changed) return null;
+        self::addUpdate((int) $t['id'], null, 'Assigned automatically to ' . $pick['full_name'] . ' (fewest open requests in ' . $t['department_name'] . ').', 'open', 'assigned');
+        Notification::send((int) $pick['id'], 'Request ' . $t['reference_no'] . ' assigned to you', $t['subject'], '?r=tickets/show&id=' . $t['id']);
+        Notification::send((int) $t['student_id'], 'Your request ' . $t['reference_no'] . ' was assigned', 'Assigned to ' . $pick['full_name'] . '.', '?r=tickets/show&id=' . $t['id']);
+        return $pick['full_name'];
     }
 }

@@ -140,12 +140,61 @@ $cv = $metrics['group_cv_scores'] ?? [];
     <?php endif; ?>
 </section>
 
+
+<section class="sec" id="step5">
+    <div class="sec-head"><h3>5. Learning from staff feedback</h3></div>
+    <p class="note" style="margin-top:0">Staff confirm or correct the category on each request. Those answers are added to the training data, the model is retrained, and the improved model replaces the old one without a restart. The figures below are measured on requests the model did not train on.</p>
+    <?php if (!$learnReady): ?>
+        <p class="flash flash-error">Run <b>database/add_ml_retraining.sql</b> in phpMyAdmin (SQL tab) to switch this on, then reload the page.</p>
+    <?php else:
+        $pc = fn($v) => $v === null ? '-' : round((float) $v * 100, 1) . '%';
+        $L = $learn;
+    ?>
+    <div class="kpis">
+        <div class="kpi is-key"><div class="n"><?= $L ? number_format((int) ($L['prev_trained_rows'] ?? 0)) . ' &rarr; ' . number_format((int) $L['trained_rows']) : '-' ?></div><div class="l">Training examples (before &rarr; after)</div></div>
+        <div class="kpi"><div class="n"><?= $L && $L['prev_synthetic_accuracy'] !== null ? $pc($L['prev_synthetic_accuracy']) . ' &rarr; ' . $pc($L['synthetic_accuracy']) : '-' ?></div><div class="l">Accuracy on the original hold-out</div></div>
+        <div class="kpi"><div class="n"><?= $L && $L['real_accuracy'] !== null ? $pc($L['prev_real_accuracy']) . ' &rarr; ' . $pc($L['real_accuracy']) : '-' ?></div><div class="l">Accuracy on staff-labelled requests<?= $L && $L['real_accuracy'] !== null ? ' (' . (int) $L['feedback_test'] . ' held out)' : '' ?></div></div>
+        <div class="kpi"><div class="n"><?= (int) $fbSummary['corrected'] ?></div><div class="l">Staff corrections collected</div></div>
+        <div class="kpi"><div class="n"><?= (int) $fbSummary['new'] ?></div><div class="l">New examples waiting to be learned</div></div>
+    </div>
+    <div class="grid-eq">
+        <div>
+            <dl class="kv">
+                <dt>Current model version</dt><dd><?= e($status['version'] ?? ($metrics['version'] ?? 'unknown')) ?></dd>
+                <dt>Last retrained</dt><dd><?= $L ? e(fmt_dt($L['trained_at'])) . ' (' . ($L['trigger_source'] === 'auto' ? 'automatic' : e($L['trained_by_name'] ?? 'administrator')) . ')' : 'not yet' ?></dd>
+                <dt>Models trained so far</dt><dd><?= MLTrainer::deployedCount() ?></dd>
+                <dt>Automatic retraining</dt><dd><?= $fbSummary['auto'] ? badge('On, at ' . (int) $fbSummary['threshold'] . ' new corrections', 'ok') : badge('Off', 'review') ?></dd>
+            </dl>
+            <p style="margin-top:14px"><a class="btn btn-primary btn-sm" href="<?= e(url('feedback/index')) ?>">Retrain the model</a></p>
+        </div>
+        <div>
+            <p class="label">Categories learned from staff feedback</p>
+            <?php $cl = $L ? (json_decode((string) $L['categories_learned'], true) ?: []) : [];
+                  arsort($cl); echo bar_list(array_map(null, array_keys($cl), array_values($cl))); ?>
+        </div>
+    </div>
+    <?php if ($learnHistory): ?>
+    <p class="label" style="margin-top:18px">Model versions</p>
+    <div class="tbl-wrap"><table class="tbl">
+        <thead><tr><th>When</th><th>Version</th><th>Examples</th><th>Hold-out</th><th>Staff test set</th><th></th></tr></thead>
+        <tbody><?php foreach ($learnHistory as $m): ?><tr>
+            <td class="nowrap"><?= e(fmt_dt($m['trained_at'])) ?></td><td><?= e($m['version']) ?></td>
+            <td><?= number_format((int) ($m['prev_trained_rows'] ?? 0)) ?> &rarr; <?= number_format((int) $m['trained_rows']) ?></td>
+            <td class="nowrap"><?= $pc($m['prev_synthetic_accuracy']) ?> &rarr; <?= $pc($m['synthetic_accuracy']) ?></td>
+            <td class="nowrap"><?= $m['real_accuracy'] === null ? 'too few yet' : $pc($m['prev_real_accuracy']) . ' &rarr; ' . $pc($m['real_accuracy']) ?></td>
+            <td><?= $m['status'] === 'deployed' ? badge('Deployed', 'ok') : badge('Rejected', 'bad') ?></td></tr><?php endforeach; ?></tbody>
+    </table></div>
+    <?php endif; ?>
+    <?php endif; ?>
+</section>
+
 <section class="sec">
     <div class="sec-head"><h3>Feedback from staff</h3></div>
     <p class="note" style="margin-top:0">When staff confirm or correct a category, that answer is stored as a labelled example for retraining the model.</p>
     <dl class="kv"><dt>Predictions reviewed by staff</dt><dd><?= $agreement['reviewed'] ?></dd>
         <dt>Category kept by staff</dt><dd><?= $agreement['rate'] === null ? '-' : $agreement['rate'] . '%' ?></dd>
         <dt>Awaiting review</dt><dd><?= $agreement['pending'] ?></dd></dl>
+    <p style="margin-top:12px"><a class="btn btn-primary btn-sm" href="<?= e(url('feedback/index')) ?>">Open retraining</a></p>
     <?php if ($confusions): ?>
     <ul class="list" style="margin-top:10px"><?php foreach ($confusions as $c): ?><li><span class="t"><?= e($c['predicted']) ?> &rarr; <?= e($c['actual']) ?></span><span class="s">corrected <?= (int) $c['n'] ?> time<?= $c['n'] == 1 ? '' : 's' ?></span></li><?php endforeach; ?></ul>
     <?php endif; ?>

@@ -9,7 +9,7 @@
 <div class="grid-2">
     <div>
         <section class="sec">
-            <div class="sec-head"><h3>Upcoming appointments</h3></div>
+            <div class="sec-head"><h3>Upcoming appointments</h3><a href="<?= e(url('appointments/index')) ?>">Manage</a></div>
             <?php if (!$appointments): ?><p class="empty">No upcoming appointments.</p><?php else: ?>
             <div class="tbl-wrap"><table class="tbl"><thead><tr><th>When</th><th>Student</th><th>Purpose</th><th>Status</th></tr></thead><tbody>
             <?php foreach ($appointments as $a): ?>
@@ -28,6 +28,6 @@
                 <div class="<?= isset($av[$d]) ? 'on' : 'off' ?>"><b><?= $label ?></b><?= isset($av[$d]) ? e(implode(', ', $av[$d])) : 'Not available' ?></div>
             <?php endforeach; ?>
         </div>
-        <p class="note">Editing availability and confirming appointments arrives with the booking module.</p>
+        <p class="note"><a href="<?= e(url('appointments/availability')) ?>">Edit availability</a> &middot; <a href="<?= e(url('appointments/index')) ?>">Respond to requests</a></p>
     </section>
 </div>

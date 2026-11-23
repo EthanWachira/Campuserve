@@ -7,6 +7,7 @@
     <div class="kpi"><div class="n"><?= $counts['open'] ?></div><div class="l">Not yet assigned</div></div>
     <div class="kpi"><div class="n"><?= $mine ?></div><div class="l">Assigned to me</div></div>
     <div class="kpi<?= count($review) ? ' is-alert' : '' ?>"><div class="n"><?= count($review) ?></div><div class="l">Category needs checking</div></div>
+    <div class="kpi<?= $overdue ? ' is-alert' : '' ?>"><div class="n"><?= (int) $overdue ?></div><div class="l">Past service target</div></div>
     <div class="kpi"><div class="n"><?= $resolvedWeek ?></div><div class="l">Resolved this week</div></div>
     <div class="kpi"><div class="n"><?= e(hours_label($avgHours)) ?></div><div class="l">Average time to resolve (30 days)</div></div>
 </div>

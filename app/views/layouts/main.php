@@ -9,10 +9,18 @@ if ($role === 'student') {
 } elseif ($role === 'admin') {
     $nav[] = ['tickets/index', 'All requests', 'list'];
     $nav[] = ['admin/users', 'Users', 'users'];
+    $nav[] = ['reports/index', 'Reports', 'chart'];
+    $nav[] = ['catalog/index', 'Categories', 'tag'];
     $nav[] = ['admin/ml', 'Classifier', 'chip'];
+    $nav[] = ['settings/index', 'Settings', 'cog'];
 } else {
     $nav[] = ['tickets/index', $role === 'lecturer' ? 'Assigned requests' : 'Request queue', 'list'];
+    if ($role === 'staff') $nav[] = ['reports/index', 'Reports', 'chart'];
 }
+if (in_array($role, ['student', 'lecturer'], true)) {
+    $nav[] = ['appointments/index', 'Appointments', 'cal'];
+}
+$apptPending = $role === 'lecturer' ? Appointment::pendingCount((int) $u['id']) : 0;
 $nav[] = ['notifications/index', 'Notifications', 'bell'];
 ?>
 <!doctype html>
@@ -20,24 +28,24 @@ $nav[] = ['notifications/index', 'Notifications', 'bell'];
 <body class="app">
 <a class="skip" href="#main">Skip to content</a>
 <aside class="side" id="side">
-    <a class="brand" href="<?= e(url('dashboard/index')) ?>"><?= logo() ?><span>Campusserve</span></a>
+    <a class="brand" href="<?= e(url('dashboard/index')) ?>"><?= logo() ?><span>Campuserve</span></a>
     <nav aria-label="Main">
         <?php foreach ($nav as [$r, $label, $ic]): ?>
-            <?php $active = $route === $r || ($r === 'tickets/index' && $route === 'tickets/show') || ($r === 'admin/users' && $route === 'admin/users'); ?>
+            <?php $active = $route === $r || ($r === 'tickets/index' && $route === 'tickets/show') || ($r === 'admin/users' && strpos($route, 'accounts/') === 0) || ($r === 'admin/ml' && strpos($route, 'feedback/') === 0)
+                || ($r === 'settings/index' && strpos($route, 'settings/') === 0)
+                || ($r === 'appointments/index' && strpos($route, 'appointments/') === 0); ?>
             <a href="<?= e(url($r)) ?>" class="nav-link<?= $active ? ' is-active' : '' ?>"<?= $active ? ' aria-current="page"' : '' ?>>
                 <?= icon($ic) ?><span><?= e($label) ?></span>
                 <?php if ($r === 'notifications/index' && $unread): ?><b class="pill"><?= $unread ?></b><?php endif; ?>
+                <?php if ($r === 'appointments/index' && $apptPending): ?><b class="pill"><?= $apptPending ?></b><?php endif; ?>
             </a>
         <?php endforeach; ?>
-        <?php if (in_array($role, ['student', 'lecturer'], true)): ?>
-            <span class="nav-link is-soon" title="Appointment booking is built in the next phase"><?= icon('cal') ?><span>Appointments</span><b class="soon">Soon</b></span>
-        <?php endif; ?>
     </nav>
     <div class="side-foot">
-        <div class="who">
+        <a class="who" href="<?= e(url('profile/index')) ?>" title="My profile" style="color:inherit;text-decoration:none">
             <span class="avatar"><?= e(initials($u['full_name'])) ?></span>
             <span class="who-text"><b><?= e($u['full_name']) ?></b><small><?= e(role_label($role)) ?><?= $u['department_name'] ? ', ' . e($u['department_name']) : '' ?></small></span>
-        </div>
+        </a>
         <form method="post" action="<?= e(url('auth/logout')) ?>"><?= csrf_field() ?>
             <button class="nav-link nav-out" type="submit"><?= icon('out') ?><span>Sign out</span></button>
         </form>

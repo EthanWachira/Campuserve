@@ -90,4 +90,16 @@ class Stats
     {
         return Database::all('SELECT a.*, u.full_name FROM audit_log a LEFT JOIN users u ON u.id = a.user_id ORDER BY a.id DESC LIMIT ' . (int) $limit);
     }
+
+    /** Active requests per staff member / lecturer, for the automatic-assignment panel. */
+    public static function workload(): array
+    {
+        $rows = Database::all(
+            'SELECT u.full_name, d.name AS dept, COUNT(t.id) n
+               FROM users u LEFT JOIN departments d ON d.id = u.department_id
+               LEFT JOIN tickets t ON t.assigned_to = u.id AND t.status IN ("open","assigned","in_progress")
+              WHERE u.role IN ("staff","lecturer") AND u.status = "active"
+              GROUP BY u.id, u.full_name, d.name ORDER BY n DESC, u.full_name');
+        return array_map(fn($r) => [$r['full_name'] . ' (' . ($r['dept'] ?? 'no department') . ')', (int) $r['n']], $rows);
+    }
 }

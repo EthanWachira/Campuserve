@@ -1,6 +1,6 @@
 <div class="page-head"><div><h2>New request</h2><p>Describe the problem in your own words. We pick the department for you.</p></div></div>
 <div class="grid-2">
-<form method="post" action="<?= e(url('tickets/create')) ?>" novalidate>
+<form method="post" enctype="multipart/form-data" action="<?= e(url('tickets/create')) ?>" novalidate>
     <?= csrf_field() ?>
     <div class="field">
         <label for="subject">Title</label>
@@ -11,6 +11,12 @@
         <label for="description">What happened?</label>
         <textarea id="description" name="description" maxlength="3000" class="<?= isset($errors['description']) ? 'is-invalid' : '' ?>" required><?= e(old('description')) ?></textarea>
         <?php if (isset($errors['description'])): ?><div class="err"><?= e($errors['description']) ?></div><?php else: ?><div class="hint">Include course or unit codes, dates and anything you already tried.</div><?php endif; ?>
+    </div>
+    <div class="field">
+        <label for="attachment">Attachment (optional)</label>
+        <input type="file" id="attachment" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx">
+        <div class="hint">Attach supporting documents or screenshots. Maximum size: 5 MB. PDF, JPG, PNG, GIF, DOC and DOCX.</div>
+        <?php if (isset($errors['attachment'])): ?><div class="err"><?= e($errors['attachment']) ?></div><?php endif; ?>
     </div>
     <p class="label">Where it will go</p>
     <div class="preview" id="preview" data-endpoint="<?= e(url('api/classify')) ?>" aria-live="polite"><p class="idle">Keep typing and we will show the department that will receive this.</p></div>

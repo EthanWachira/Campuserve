@@ -8,7 +8,7 @@
             <td class="ref"><a href="<?= e(url('tickets/show', ['id' => $r['id']])) ?>"><?= e($r['reference_no']) ?></a></td>
             <td><span class="subj"><?= e($r['subject']) ?></span><div class="sub"><?= e($r['category_name']) ?><?= $r['needs_review'] ? ' ' . badge('Needs review', 'review') : '' ?></div></td>
             <?php if (!empty($showStudent)): ?><td><?= e($r['student_name']) ?></td><?php endif; ?>
-            <td><?= status_badge($r['status']) ?></td>
+            <td><?= status_badge($r['status']) ?><?= Sla::badge($r) ?></td>
             <td><?= priority_badge($r['priority']) ?></td>
             <td class="nowrap muted"><?= e(time_ago($r['created_at'])) ?></td>
         </tr>

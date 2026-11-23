@@ -1,5 +1,5 @@
 <h1>Sign in</h1>
-<p class="sub">Use your Campusserve email and password.</p>
+<p class="sub">Use your Campuserve email and password.</p>
 <form method="post" action="<?= e(url('auth/login')) ?>" novalidate>
     <?= csrf_field() ?>
     <div class="field">
@@ -12,6 +12,7 @@
             <input type="password" id="password" name="password" autocomplete="current-password" required>
             <button type="button" data-pw="password" aria-pressed="false">Show</button>
         </div>
+        <p class="auth-alt" style="margin:6px 0 0;text-align:right"><a href="<?= e(url('auth/forgot')) ?>">Forgot password?</a></p>
     </div>
     <button class="btn btn-primary btn-block" type="submit">Sign in</button>
 </form>

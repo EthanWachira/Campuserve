@@ -4,6 +4,9 @@ class Notification
     public static function send(int $userId, string $title, ?string $body = null, ?string $link = null): void
     {
         Database::exec('INSERT INTO notifications (user_id, title, body, link) VALUES (?,?,?,?)', [$userId, $title, $body, $link]);
+        // Every in-app notification is also emailed (queued, sent after the page is returned). Never blocks the action.
+        try { Mailer::toUser($userId, $title, (string) $body, $link); }
+        catch (Throwable $e) { error_log('Notification email skipped: ' . $e->getMessage()); }
     }
 
     public static function recent(int $userId, int $limit = 6): array

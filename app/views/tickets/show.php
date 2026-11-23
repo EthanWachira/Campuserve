@@ -11,6 +11,7 @@
             <div><dt>Department</dt><dd><?= e($t['department_name']) ?></dd></div>
             <div><dt>Handled by</dt><dd><?= e($t['assignee_name'] ?? 'Not yet assigned') ?></dd></div>
             <div><dt>Opened</dt><dd><?= e(fmt_dt($t['created_at'])) ?></dd></div>
+            <div><dt>Service target</dt><dd><?= e(Sla::describe($t)) ?></dd></div>
         </dl>
     </div>
     <div class="th-cut" aria-hidden="true"></div>
@@ -27,6 +28,17 @@
         <div class="sec-head"><h3>Request</h3></div>
         <?php if ($manage): ?><p class="note"><?= e($t['student_name']) ?> (<?= e($t['student_no']) ?>), <?= e($t['programme']) ?></p><?php endif; ?>
         <div class="desc"><?= e($t['description']) ?></div>
+        <?php if (!empty($attachments)): ?>
+        <div class="class-box" style="margin-top:14px">
+            <b>Attachments</b>
+            <ul style="margin:8px 0 0;padding-left:20px">
+                <?php foreach ($attachments as $attachment): ?>
+                <li><a href="<?= e(url('tickets/download', ['id' => $attachment['id']])) ?>"><?= e($attachment['original_name']) ?></a>
+                    <span class="note">(<?= number_format(((int) $attachment['file_size']) / 1024, 1) ?> KB<?= $attachment['uploader_name'] ? ', uploaded by ' . e($attachment['uploader_name']) : '' ?>)</span></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <?php endif; ?>
         <?php if ($t['predicted_name'] && $manage): ?>
         <div class="class-box">
             <b>Automatic classification:</b> <?= e($t['predicted_name']) ?>
@@ -57,11 +69,14 @@
 <?php if ($manage): ?>
     <div class="panel-side">
         <h3>Respond</h3>
-        <form method="post" action="<?= e(url('tickets/update')) ?>"><?= csrf_field() ?>
+        <form method="post" enctype="multipart/form-data" action="<?= e(url('tickets/update')) ?>"><?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= (int) $t['id'] ?>"><input type="hidden" name="action" value="status">
             <div class="field"><label for="status">Status</label>
                 <select id="status" name="status"><?php foreach (TICKET_STATUSES as $k => $l): ?><option value="<?= e($k) ?>"<?= $t['status'] === $k ? ' selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?></select></div>
             <div class="field"><label for="message">Message to the student</label><textarea id="message" name="message" maxlength="2000"></textarea></div>
+            <div class="field"><label for="attachment">Attachment (optional)</label>
+                <input type="file" id="attachment" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx">
+                <div class="hint">Maximum size: 5 MB. PDF, JPG, PNG, GIF, DOC and DOCX.</div></div>
             <button class="btn btn-primary btn-sm" type="submit">Send update</button>
         </form>
         <form method="post" action="<?= e(url('tickets/update')) ?>"><?= csrf_field() ?>

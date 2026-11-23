@@ -49,6 +49,7 @@ class AdminController extends Controller
             'totalRecords' => (int) Database::value('SELECT COUNT(*) FROM tickets'),
             'latest' => $latest, 'results' => $results, 'predictedMix' => $predictedMix, 'schemaMissing' => $schemaMissing,
             'agreement' => Stats::mlAgreement(), 'confusions' => Stats::mlConfusions(),
+            'learn' => MLTrainer::current(), 'learnHistory' => MLTrainer::history(6), 'fbSummary' => MLTrainer::summary(), 'learnReady' => MLTrainer::ready(),
         ]);
     }
 
@@ -95,6 +96,40 @@ class AdminController extends Controller
         Auth::audit((int) $u['id'], 'ml_batch_run', "$done records classified");
         flash('success', "The model classified $done of " . count($tickets) . ' records' . ($failed ? " ($failed could not be classified)" : '') . '.');
         redirect('admin/ml');
+    }
+
+    /** Switch automatic assignment on or off. */
+    public function autoassignAction(): void
+    {
+        $u = $this->requireRole('admin');
+        if (!$this->isPost()) redirect('dashboard/index');
+        $this->requireCsrf();
+        $on = ($_POST['enabled'] ?? '') === '1';
+        try {
+            Settings::set('auto_assign', $on ? '1' : '0');
+        } catch (PDOException $e) {
+            flash('error', 'The settings table is missing. Run database/add_auto_assign.sql in phpMyAdmin first.');
+            redirect('dashboard/index');
+        }
+        Auth::audit((int) $u['id'], 'auto_assign_' . ($on ? 'on' : 'off'), null);
+        flash('success', 'Automatic assignment is now ' . ($on ? 'on. New requests will be given to the person with the fewest open requests.' : 'off. New requests will wait for staff to assign them.'));
+        redirect('dashboard/index');
+    }
+
+    /** Assign every request that is currently waiting, most urgent first. */
+    public function assignwaitingAction(): void
+    {
+        $u = $this->requireRole('admin');
+        if (!$this->isPost()) redirect('dashboard/index');
+        $this->requireCsrf();
+        $ids = array_column(Database::all('SELECT id FROM tickets WHERE status = "open" AND assigned_to IS NULL AND needs_review = 0
+                                           ORDER BY FIELD(priority, "high", "medium", "low"), created_at'), 'id');
+        $n = 0;
+        foreach ($ids as $id) { if (Ticket::autoAssign((int) $id, true)) $n++; }
+        $left = (int) Database::value('SELECT COUNT(*) FROM tickets WHERE status = "open" AND assigned_to IS NULL');
+        Auth::audit((int) $u['id'], 'auto_assign_backlog', "$n assigned");
+        flash('success', "$n waiting request" . ($n === 1 ? ' was' : 's were') . ' assigned.' . ($left ? " $left still need a person to confirm the category first." : ''));
+        redirect('dashboard/index');
     }
 
     /** Describes the training file for supervisor step 1: records, attributes, class balance, sources. */

@@ -34,8 +34,8 @@
     </div>
     <div>
         <section class="sec">
-            <div class="sec-head"><h3>Upcoming appointments</h3></div>
-            <?php if (!$appointments): ?><p class="empty">No appointments booked.</p><?php else: ?>
+            <div class="sec-head"><h3>Upcoming appointments</h3><a href="<?= e(url('appointments/book')) ?>">Book</a></div>
+            <?php if (!$appointments): ?><p class="empty">No appointments booked. <a href="<?= e(url('appointments/book')) ?>">Book one with a lecturer</a>.</p><?php else: ?>
             <ul class="list">
                 <?php foreach ($appointments as $a): ?>
                 <li><span class="t"><?= e($a['lecturer_name']) ?></span>

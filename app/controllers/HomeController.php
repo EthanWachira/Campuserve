@@ -4,7 +4,7 @@ class HomeController extends Controller
     public function indexAction(): void
     {
         $this->render('home/landing', [
-            'title' => 'Campusserve: student support that keeps track',
+            'title' => 'Campuserve: student support that keeps track',
             'routing' => Ticket::categories(),
             'user' => Auth::user(),
         ], 'layouts/public');

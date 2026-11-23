@@ -4,6 +4,7 @@ class DashboardController extends Controller
     public function indexAction(): void
     {
         $u = $this->requireLogin();
+        Jobs::maybeRun();
         match ($u['role']) {
             'student'  => $this->student($u),
             'lecturer' => $this->lecturer($u),
@@ -37,6 +38,7 @@ class DashboardController extends Controller
             'mine' => Ticket::search($u, ['mine' => 1, 'active' => 1])['total'],
             'avgHours' => Stats::avgResolutionHours($u),
             'resolvedWeek' => Stats::resolvedSince($u, 7),
+            'overdue' => Sla::countOverdue($u),
             'perDay' => Stats::perDay($u, 14),
             'byCategory' => Stats::byCategory($u),
             'ml' => Stats::mlAgreement((int) $u['department_id']),
@@ -67,6 +69,9 @@ class DashboardController extends Controller
             'ml' => Stats::mlAgreement(),
             'mlStatus' => MLClient::status(),
             'unassigned' => Ticket::search($u, ['status' => 'open'])['total'],
+            'overdue' => Sla::countOverdue($u),
+            'autoAssign' => Settings::get('auto_assign', '0') === '1',
+            'workload' => Stats::workload(),
             'audit' => Stats::recentAudit(7),
         ]);
     }

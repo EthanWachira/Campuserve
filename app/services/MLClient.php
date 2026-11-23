@@ -43,6 +43,24 @@ class MLClient
         return is_file($f) ? (json_decode((string) file_get_contents($f), true) ?: null) : null;
     }
 
+    /**
+     * POST JSON and return [http status, decoded body]. Status 0 means the service could not be reached.
+     * Unlike callApi(), error bodies are returned too, so the admin page can show the service's message.
+     */
+    public static function postJson(string $path, array $payload, float $timeout): array
+    {
+        if (!function_exists('curl_init')) return [0, null];
+        $ch = curl_init(rtrim(App::config('ml')['url'], '/') . $path);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 2,
+            CURLOPT_POST => true, CURLOPT_HTTPHEADER => ['Content-Type: application/json'], CURLOPT_POSTFIELDS => json_encode($payload)]);
+        $body = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($body === false) return [0, null];
+        $data = json_decode($body, true);
+        return [$code, is_array($data) ? $data : null];
+    }
+
     private static function callApi(string $path, ?array $payload, float $timeout): ?array
     {
         if (!function_exists('curl_init')) return null;

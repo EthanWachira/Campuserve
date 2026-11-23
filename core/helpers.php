@@ -133,6 +133,9 @@ function icon(string $name): string
         'out'   => '<path d="M8 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M12 7l3 3-3 3M15 10H8"/>',
         'search'=> '<circle cx="9" cy="9" r="5"/><path d="m13 13 4 4"/>',
         'check' => '<path d="m4 10.5 4 4 8-9"/>',
+        'chart' => '<path d="M4 16V9M10 16V4M16 16v-5"/>',
+        'cog'   => '<circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/>',
+        'tag'   => '<path d="M3 3h7l7 7-7 7-7-7z"/><circle cx="7" cy="7" r="1"/>',
         'menu'  => '<path d="M3 5.5h14M3 10h14M3 14.5h14"/>',
     ];
     return '<svg class="icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . ($p[$name] ?? '') . '</svg>';

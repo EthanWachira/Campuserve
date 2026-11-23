@@ -1,5 +1,5 @@
 """
-Campusserve - ML classification API (Flask).
+Campuserve - ML classification API (Flask).
 
     pip install -r requirements.txt
     python api.py            # listens on http://127.0.0.1:5000
@@ -9,6 +9,7 @@ POST /classify  {"subject": "...", "description": "..."}
 GET  /health
 """
 import re
+import threading
 from pathlib import Path
 
 import joblib
@@ -38,6 +39,7 @@ MEDIUM = re.compile(r"\b(clash|missing|wrong|incorrect|blocked|not working|canno
                     r"expired|failed|refund|twice)\b", re.I)
 
 app = Flask(__name__)
+_lock = threading.Lock()      # one retrain at a time; also guards the model swap
 
 
 def priority_for(text: str) -> str:
@@ -54,6 +56,39 @@ def health():
     return jsonify(status="ok", model_version=VERSION, classes=list(PIPELINE.classes_))
 
 
+@app.post("/reload")
+def reload_model():
+    """Load whatever is in model/classifier.joblib without restarting the service."""
+    global PIPELINE, VERSION
+    with _lock:
+        b = joblib.load(HERE / "model" / "classifier.joblib")
+        PIPELINE, VERSION = b["pipeline"], b["version"]
+    return jsonify(status="ok", model_version=VERSION)
+
+
+@app.post("/retrain")
+def retrain_endpoint():
+    """Learn from staff feedback: body {"rows":[{ticket_id,text,category},...], "force":false}.
+    A deployed model replaces the live one immediately, so the very next request is classified by it."""
+    global PIPELINE, VERSION
+    data = request.get_json(silent=True) or {}
+    if not _lock.acquire(blocking=False):
+        return jsonify(error="A retraining run is already in progress."), 409
+    try:
+        from retrain import retrain
+        result = retrain(data.get("rows") or [], force=bool(data.get("force")))
+        new = result.pop("_pipeline", None)
+        if new is not None:
+            PIPELINE, VERSION = new, result["version"]
+        return jsonify(result)
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    except Exception as e:                      # noqa: BLE001 - report to the admin page instead of a stack trace
+        return jsonify(error=f"Retraining failed: {e}"), 500
+    finally:
+        _lock.release()
+
+
 @app.post("/classify")
 def classify():
     data = request.get_json(silent=True) or {}
@@ -63,8 +98,9 @@ def classify():
     if len(text) < 5:
         return jsonify(error="Provide a subject or description of at least 5 characters."), 400
 
-    probs = PIPELINE.predict_proba([text])[0]
-    ranked = sorted(zip(PIPELINE.classes_, probs), key=lambda p: p[1], reverse=True)
+    pipe, version = PIPELINE, VERSION
+    probs = pipe.predict_proba([text])[0]
+    ranked = sorted(zip(pipe.classes_, probs), key=lambda p: p[1], reverse=True)
     category, confidence = ranked[0]
     return jsonify(
         category=category,
@@ -73,7 +109,7 @@ def classify():
         priority=priority_for(text),
         needs_review=bool(confidence < REVIEW_THRESHOLD),
         alternatives=[{"category": c, "confidence": round(float(p), 4)} for c, p in ranked[1:3]],
-        model_version=VERSION,
+        model_version=version,
     )
 
 

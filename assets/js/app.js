@@ -1,4 +1,4 @@
-/* Campusserve front-end. Plain JavaScript, no dependencies, no inline scripts (see the CSP in core/App.php). */
+/* Campuserve front-end. Plain JavaScript, no dependencies, no inline scripts (see the CSP in core/App.php). */
 (function () {
     'use strict';
 
@@ -17,6 +17,11 @@
             var side = document.getElementById('side');
             if (side) side.classList.toggle('is-open');
         });
+    });
+
+    /* ---- print / save as PDF button on reports ---- */
+    document.querySelectorAll('[data-print]').forEach(function (btn) {
+        btn.addEventListener('click', function () { window.print(); });
     });
 
     /* ---- show / hide password ---- */
@@ -45,6 +50,13 @@
     document.querySelectorAll('form[data-confirm]').forEach(function (f) {
         f.addEventListener('submit', function (e) {
             if (!window.confirm(f.getAttribute('data-confirm'))) e.preventDefault();
+        });
+    });
+
+    /* ---- booking page: reload the time list when the lecturer or the day changes ---- */
+    document.querySelectorAll('form[data-autosubmit]').forEach(function (f) {
+        f.querySelectorAll('select, input[type="date"]').forEach(function (c) {
+            c.addEventListener('change', function () { if (f.checkValidity()) f.submit(); });
         });
     });
 

@@ -44,3 +44,21 @@ Be accurate: "Agreement is high partly because the demo records use the same kin
 - Page says "Offline": start `py api.py`. The app still works with the keyword fallback.
 - Classify all fails: show the existing run from step 5 above, plus the charts.
 - Database error page: check MySQL is green in XAMPP.
+
+
+---
+# Added: "Does the system learn from new requests?" (continuous learning demo)
+
+**Setup (once):** run `database/add_ml_retraining.sql` in phpMyAdmin. Keep `py api.py` running.
+
+**Demo script (about 3 minutes):**
+1. Sign in as a student and submit a request, e.g. "The biometric scanner keeps rejecting my fingerprint at the lab door". Note the category the model picked.
+2. Sign in as the staff member in that department (or admin). Open the request. Use **Confirm category** or **Change category** to set the right one. Repeat for a few requests. Each answer is stored as a labelled example.
+3. Admin > Classifier > **Retrain the model**. Show the counters: labelled requests, corrected by staff, new since last retraining.
+4. Click **Retrain now**. It takes a few seconds. The banner shows the new version and the accuracy before and after.
+5. On the Classifier page, section 5 shows: training examples before and after, accuracy on the original hold-out, accuracy on staff-labelled requests the model never trained on, last retraining date, current model version, categories learned from staff.
+6. Submit the same kind of request again as a student: it is now classified by the new model version (shown on the request), with no restart of the service.
+
+**What to say:** "This is supervised learning with a human in the loop. The model is not retrained on every ticket, only when enough verified examples have been collected. The new model replaces the old one only if it is not worse on requests it has never seen, and the old one is archived."
+
+**Be honest about the numbers:** the accuracy figures are measured, not illustrative. With only a few staff-labelled requests the staff test set is small, so the dashboard says so. The original hold-out can move by a point or two either way when new data is added; that is normal, and a drop of more than 2 points makes the system reject the new model.
